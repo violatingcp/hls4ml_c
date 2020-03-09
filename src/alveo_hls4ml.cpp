@@ -65,7 +65,7 @@ void alveo_hls4ml(
 #pragma HLS INTERFACE s_axilite port=out  bundle=control
 #pragma HLS INTERFACE s_axilite port=return bundle=control
   //#pragma HLS dataflow
-    unsigned short insize, outsize;
+    //unsigned short insize, outsize;
     //necessary for hls4ml kernel, not used
     
     input_t in_buf[STREAMSIZE][DATA_SIZE_IN];
@@ -79,22 +79,25 @@ void alveo_hls4ml(
     
     //getting data from axi stream and formatting properly
     for (int i = 0; i < STREAMSIZE; i++) {
-#pragma HLS PIPELINE II=11 rewind
+//#pragma HLS PIPELINE II=11 rewind
       for (int j = 0; j < DATA_SIZE_IN; j++) {
+//#pragma HLS LOOP UNROLL
 	in_buf[i][j] = (input_t)in[i*DATA_SIZE_IN+j];
       }
     }
 
     //run inference
     for (int i = 0; i < STREAMSIZE; i++) {
-#pragma HLS PIPELINE II=1 rewind
-    hls4ml: MYPROJ(in_buf[i],out_buf[i],insize,outsize);
+//#pragma HLS PIPELINE II=1 rewind
+#pragma HLS DATAFLOW
+      hls4ml: MYPROJ(in_buf[i],out_buf[i]);//,insize,outsize);
     }
 
     //place output into axi stream output
     for (int i = 0; i < STREAMSIZE; i++) {
-#pragma HLS PIPELINE II=1 rewind
+//#pragma HLS PIPELINE II=1 rewind
       for (int j = 0; j < DATA_SIZE_OUT; j++) {
+//#pragma HLS LOOP UNROLL
 	out[i*DATA_SIZE_OUT+j] = (data_t)out_buf[i][j];
       }
     }

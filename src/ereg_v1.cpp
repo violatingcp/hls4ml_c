@@ -30,19 +30,19 @@
 
 void ereg_v1(
     input_t input[N_INPUT_1_1],
-    layer6_t layer6_out[N_LAYER_6],
-    unsigned short &const_size_in_1,
-    unsigned short &const_size_out_1
+    layer6_t layer6_out[N_LAYER_6]
+    //unsigned short &const_size_in_1,
+    //unsigned short &const_size_out_1
 ) {
 
     //hls-fpga-machine-learning insert IO
     //#pragma HLS ARRAY_RESHAPE variable=input complete dim=0 
     //#pragma HLS ARRAY_RESHAPE variable=layer6_out complete dim=0 
-    #pragma HLS INTERFACE ap_vld port=input,layer6_out 
+    //#pragma HLS INTERFACE ap_vld port=input,layer6_out 
     #pragma HLS PIPELINE 
 
-    const_size_in_1 = N_INPUT_1_1;
-    const_size_out_1 = N_LAYER_6;
+    //const_size_in_1 = N_INPUT_1_1;
+    //const_size_out_1 = N_LAYER_6;
 
 #ifndef __SYNTHESIS__
     static bool loaded_weights = false;

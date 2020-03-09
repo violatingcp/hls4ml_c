@@ -30,9 +30,9 @@
 // Prototype of top level function for C-synthesis
 void ereg_v1(
     input_t input[N_INPUT_1_1],
-    layer6_t layer6_out[N_LAYER_6],
-    unsigned short &const_size_in_1,
-    unsigned short &const_size_out_1
+    layer6_t layer6_out[N_LAYER_6]
+//    unsigned short &const_size_in_1,
+//    unsigned short &const_size_out_1
 );
 
 #endif
