@@ -46,8 +46,25 @@ Description:
         out   (output)    --> Output Vector
    */
 extern "C" {
+
+#define N1 147456
+#define N2 294912
+#define N3 589824
+#define N4 589824
+
+template<unsigned N> 
+void fillWeights(model_default_t *iWeightsIn,model_default_t weights[N]) { 
+  for(int i0 = 0; i0 < N; i0++) { 
+    weights[i0] = iWeightsIn[i0];
+  }
+}
+
 void alveo_hls4ml(
         const bigdata_t *in, // Read-Only Vector
+	const model_default_t *in_weights1, 
+	const model_default_t *in_weights2, 
+	const model_default_t *in_weights3,
+	const model_default_t *in_weights4,  
         bigdata_t *out       // Output Result
         )
 {
@@ -66,16 +83,29 @@ void alveo_hls4ml(
 #pragma HLS INTERFACE s_axilite port=return bundle=control
     #pragma HLS DATAFLOW
     //necessary for hls4ml kernel, not used
+    static data_t w1[NW1];
+    static data_t w2[NW2];
+    static data_t w3[NW3];
+    static data_t w4[NW4];
+    static bool fillWeights = false;
+    if(!fillWeights) { 
+      fillWeights<NW1>(w1,in_weights1);
+      fillWeights<NW2>(w2,in_weights2);
+      fillWeights<NW3>(w3,in_weights3);
+      fillWeights<NW4>(w4,in_weights4);
+      fillWeights = true;
+    }
 
     bigdata_t in_bigbuf[STREAMSIZE];
     bigdata_t out_bigbuf[COMPSTREAMSIZE];
     
-    input_t in_buf[STREAMSIZE][DATA_SIZE_IN];
-    layer11_t out_buf[STREAMSIZE][DATA_SIZE_OUT];
-    //these will get partitioned properly in the hls4ml code
+    hls::stream<input_t>  in_buf [DATA_SIZE_IN];
+    hls::stream<result_t> out_buf[DATA_SIZE_OUT];
 
-    #pragma HLS ARRAY_RESHAPE   variable=in_buf  complete dim=2
-    #pragma HLS ARRAY_RESHAPE   variable=out_buf complete dim=2
+    //these will get partitioned properly in the hls4ml code
+    //#pragma HLS ARRAY_RESHAPE   variable=in_buf  complete dim=0
+    //#pragma HLS ARRAY_RESHAPE   variable=out_buf complete dim=0
+    
 
     //getting data from DDR
     for (int i = 0; i < STREAMSIZE; i++) {
@@ -91,7 +121,7 @@ void alveo_hls4ml(
     //run inference
     for (int i = 0; i < STREAMSIZE; i++) {
       #pragma HLS DATAFLOW
-      hls4ml: MYPROJ(in_buf[i],out_buf[i]);
+      hls4ml: MYPROJ(in_buf[i],out_buf[i],w1,w2,w3,w4);
     }
     for (int i = 0; i < COMPSTREAMSIZE; i++) {
       #pragma HLS PIPELINE
